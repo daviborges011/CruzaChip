@@ -181,3 +181,83 @@ function palavraAtiva() {
 }
 
 function outraDir(d) { return d === 'H' ? 'V' : 'H'; }
+
+function realcar() {
+  Object.values(casas).forEach(c => c.el.classList.remove('ativa', 'foco'));
+  PALAVRAS.forEach(p => p.li.classList.remove('ativa'));
+  const p = palavraAtiva();
+  if (!p) return;
+  p.casas.forEach(c => c.el.classList.add('ativa'));
+  atual.casa.el.classList.add('foco');
+  p.li.classList.add('ativa');
+}
+
+function selecionar(casa, dir) {
+  atual.casa = casa;
+  atual.dir = casa.palavras[dir] ? dir : outraDir(dir);
+  realcar();
+  casa.input.focus();
+}
+
+function mover(casa, dl, dc, dir) {
+  let l = casa.l + dl, c = casa.c + dc;
+  while (l >= 0 && l < linhas && c >= 0 && c < colunas) {
+    const prox = casas[l + ',' + c];
+    if (prox) { selecionar(prox, dir); return; }
+    l += dl; c += dc;
+  }
+}
+
+function limparCasa(casa) {
+  casa.input.value = '';
+  casa.el.classList.remove('certa', 'errada');
+}
+
+function ligarEventos(casa) {
+  const input = casa.input;
+  input.addEventListener('mousedown', () => { casa.jaAtiva = atual.casa === casa; });
+  input.addEventListener('click', () => {
+    if (casa.jaAtiva) {
+      if (casa.palavras.H && casa.palavras.V) atual.dir = outraDir(atual.dir);
+      realcar();
+    } else {
+      selecionar(casa, atual.dir);
+    }
+  });
+  input.addEventListener('focus', () => {
+    if (atual.casa !== casa) {
+      atual.casa = casa;
+      if (!casa.palavras[atual.dir]) atual.dir = outraDir(atual.dir);
+      realcar();
+    }
+    input.select();
+  });
+  input.addEventListener('input', () => {
+    const v = input.value.normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase();
+    input.value = v.slice(-1);
+    casa.el.classList.remove('certa', 'errada');
+    if (input.value) {
+      const p = palavraAtiva();
+      const i = p.casas.indexOf(casa);
+      if (i < p.casas.length - 1) selecionar(p.casas[i + 1], atual.dir);
+    }
+  });
+  input.addEventListener('keydown', e => {
+    const teclas = {
+      ArrowRight: [0, 1, 'H'], ArrowLeft: [0, -1, 'H'],
+      ArrowDown: [1, 0, 'V'], ArrowUp: [-1, 0, 'V']
+    };
+    if (teclas[e.key]) {
+      e.preventDefault();
+      mover(casa, teclas[e.key][0], teclas[e.key][1], teclas[e.key][2]);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (casa.palavras.H && casa.palavras.V) { atual.dir = outraDir(atual.dir); realcar(); }
+    } else if (e.key === 'Backspace' && !input.value) {
+      e.preventDefault();
+      const p = palavraAtiva();
+      const i = p.casas.indexOf(casa);
+      if (i > 0) { limparCasa(p.casas[i - 1]); selecionar(p.casas[i - 1], atual.dir); }
+    }
+  });
+}
