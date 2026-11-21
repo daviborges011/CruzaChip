@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CruzaChip · Cruzadinha de Arquitetura Computacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="chip">
+    <h1>CruzaChip</h1>
+    <p>Cruzadinha de Arquitetura Computacional</p>
+  </header>
+
+  <main>
+    <section class="placa" aria-label="Tabuleiro">
+      <div class="painel">
+        <p id="contador" class="contador" aria-live="polite">0 de 14 palavras</p>
+        <div class="botoes">
+          <button id="btn-conferir" type="button">Conferir</button>
+          <button id="btn-reiniciar" type="button" class="sec">Reiniciar</button>
+        </div>
+      </div>
+      <div id="tabuleiro" class="tabuleiro" role="group" aria-label="Casas da cruzadinha"></div>
+      <p id="mensagem" class="mensagem" aria-live="polite">Clique numa casa e digite. Enter alterna entre horizontal e vertical.</p>
+    </section>
+
+    <section class="pistas" aria-label="Pistas">
+      <div>
+        <h2>Horizontais</h2>
+        <ol id="pistas-h"></ol>
+      </div>
+      <div>
+        <h2>Verticais</h2>
+        <ol id="pistas-v"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
