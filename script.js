@@ -125,7 +125,7 @@ PALAVRAS.forEach(p => {
 let numero = 0;
 for (let l = 0; l < linhas; l++) {
   for (let c = 0; c < colunas; c++) {
-    const iniciam = PALAVRAS.filter(p => p.l === l && p.c === c);
+    let iniciam = PALAVRAS.filter(p => p.l === l && p.c === c);
     if (iniciam.length) {
       numero++;
       casas[l + ',' + c].num = numero;
@@ -140,17 +140,17 @@ function montarTabuleiro() {
   elTab.style.setProperty('--cols', colunas);
   for (let l = 0; l < linhas; l++) {
     for (let c = 0; c < colunas; c++) {
-      const casa = casas[l + ',' + c];
-      const el = document.createElement('div');
+      let casa = casas[l + ',' + c];
+      let el = document.createElement('div');
       if (!casa) { el.className = 'vazia'; elTab.appendChild(el); continue; }
       el.className = 'casa';
       if (casa.num) {
-        const n = document.createElement('span');
+        let n = document.createElement('span');
         n.className = 'num';
         n.textContent = casa.num;
         el.appendChild(n);
       }
-      const input = document.createElement('input');
+      let input = document.createElement('input');
       input.maxLength = 2;
       input.autocomplete = 'off';
       input.autocapitalize = 'characters';
@@ -167,7 +167,7 @@ function montarTabuleiro() {
 
 function montarPistas() {
   PALAVRAS.slice().sort((a, b) => a.num - b.num).forEach(p => {
-    const li = document.createElement('li');
+    let li = document.createElement('li');
     li.innerHTML = '<b>' + p.num + '</b> <span></span>';
     li.querySelector('span').textContent = p.p;
     li.addEventListener('click', () => selecionar(p.casas[0], p.d));
@@ -185,7 +185,7 @@ function outraDir(d) { return d === 'H' ? 'V' : 'H'; }
 function realcar() {
   Object.values(casas).forEach(c => c.el.classList.remove('ativa', 'foco'));
   PALAVRAS.forEach(p => p.li.classList.remove('ativa'));
-  const p = palavraAtiva();
+  let p = palavraAtiva();
   if (!p) return;
   p.casas.forEach(c => c.el.classList.add('ativa'));
   atual.casa.el.classList.add('foco');
@@ -202,7 +202,7 @@ function selecionar(casa, dir) {
 function mover(casa, dl, dc, dir) {
   let l = casa.l + dl, c = casa.c + dc;
   while (l >= 0 && l < linhas && c >= 0 && c < colunas) {
-    const prox = casas[l + ',' + c];
+    let prox = casas[l + ',' + c];
     if (prox) { selecionar(prox, dir); return; }
     l += dl; c += dc;
   }
@@ -214,7 +214,7 @@ function limparCasa(casa) {
 }
 
 function ligarEventos(casa) {
-  const input = casa.input;
+  let input = casa.input;
   input.addEventListener('mousedown', () => { casa.jaAtiva = atual.casa === casa; });
   input.addEventListener('click', () => {
     if (casa.jaAtiva) {
@@ -233,17 +233,17 @@ function ligarEventos(casa) {
     input.select();
   });
   input.addEventListener('input', () => {
-    const v = input.value.normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase();
+    let v = input.value.normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase();
     input.value = v.slice(-1);
     casa.el.classList.remove('certa', 'errada');
     if (input.value) {
-      const p = palavraAtiva();
-      const i = p.casas.indexOf(casa);
+      let p = palavraAtiva();
+      let i = p.casas.indexOf(casa);
       if (i < p.casas.length - 1) selecionar(p.casas[i + 1], atual.dir);
     }
   });
   input.addEventListener('keydown', e => {
-    const teclas = {
+    let teclas = {
       ArrowRight: [0, 1, 'H'], ArrowLeft: [0, -1, 'H'],
       ArrowDown: [1, 0, 'V'], ArrowUp: [-1, 0, 'V']
     };
@@ -255,9 +255,48 @@ function ligarEventos(casa) {
       if (casa.palavras.H && casa.palavras.V) { atual.dir = outraDir(atual.dir); realcar(); }
     } else if (e.key === 'Backspace' && !input.value) {
       e.preventDefault();
-      const p = palavraAtiva();
-      const i = p.casas.indexOf(casa);
+      let p = palavraAtiva();
+      let i = p.casas.indexOf(casa);
       if (i > 0) { limparCasa(p.casas[i - 1]); selecionar(p.casas[i - 1], atual.dir); }
     }
   });
 }
+
+function conferir() {
+  Object.values(casas).forEach(c => c.el.classList.remove('certa', 'errada'));
+  let acertos = 0;
+  const erradas = [];
+  PALAVRAS.forEach(p => {
+    const digitado = p.casas.map(c => c.input.value || '·').join('');
+    const ok = digitado === p.r;
+    p.li.classList.toggle('certa', ok);
+    p.li.classList.toggle('errada', !ok);
+    if (ok) { acertos++; p.casas.forEach(c => c.el.classList.add('certa')); }
+    else erradas.push(p);
+  });
+  erradas.forEach(p => p.casas.forEach(c => {
+    if (!c.el.classList.contains('certa')) c.el.classList.add('errada');
+  }));
+  elContador.textContent = acertos + ' de ' + PALAVRAS.length + ' palavras';
+  const falta = PALAVRAS.length - acertos;
+  elMsg.textContent = falta === 0
+    ? 'Placa completa! Todas as palavras estão certas.'
+    : 'Faltam ' + falta + (falta === 1 ? ' palavra' : ' palavras') + '. As erradas estão em vermelho.';
+}
+
+function reiniciar() {
+  Object.values(casas).forEach(limparCasa);
+  PALAVRAS.forEach(p => p.li.classList.remove('certa', 'errada'));
+  elContador.textContent = '0 de ' + PALAVRAS.length + ' palavras';
+  elMsg.textContent = MSG_INICIAL;
+  selecionar(PALAVRAS[0].casas[0], PALAVRAS[0].d);
+}
+
+document.getElementById('btn-conferir').addEventListener('click', conferir);
+document.getElementById('btn-reiniciar').addEventListener('click', reiniciar);
+
+montarTabuleiro();
+montarPistas();
+elContador.textContent = '0 de ' + PALAVRAS.length + ' palavras';
+
+
