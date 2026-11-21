@@ -120,3 +120,64 @@ PALAVRAS.forEach(p => {
     p.casas.push(casas[chave]);
   }
 });
+
+// numeração: lê o tabuleiro da esquerda para a direita, de cima para baixo
+let numero = 0;
+for (let l = 0; l < linhas; l++) {
+  for (let c = 0; c < colunas; c++) {
+    const iniciam = PALAVRAS.filter(p => p.l === l && p.c === c);
+    if (iniciam.length) {
+      numero++;
+      casas[l + ',' + c].num = numero;
+      iniciam.forEach(p => (p.num = numero));
+    }
+  }
+}
+
+let atual = { casa: null, dir: 'H' };
+
+function montarTabuleiro() {
+  elTab.style.setProperty('--cols', colunas);
+  for (let l = 0; l < linhas; l++) {
+    for (let c = 0; c < colunas; c++) {
+      const casa = casas[l + ',' + c];
+      const el = document.createElement('div');
+      if (!casa) { el.className = 'vazia'; elTab.appendChild(el); continue; }
+      el.className = 'casa';
+      if (casa.num) {
+        const n = document.createElement('span');
+        n.className = 'num';
+        n.textContent = casa.num;
+        el.appendChild(n);
+      }
+      const input = document.createElement('input');
+      input.maxLength = 2;
+      input.autocomplete = 'off';
+      input.autocapitalize = 'characters';
+      input.spellcheck = false;
+      input.setAttribute('aria-label', 'Linha ' + (l + 1) + ', coluna ' + (c + 1));
+      el.appendChild(input);
+      casa.el = el;
+      casa.input = input;
+      ligarEventos(casa);
+      elTab.appendChild(el);
+    }
+  }
+}
+
+function montarPistas() {
+  PALAVRAS.slice().sort((a, b) => a.num - b.num).forEach(p => {
+    const li = document.createElement('li');
+    li.innerHTML = '<b>' + p.num + '</b> <span></span>';
+    li.querySelector('span').textContent = p.p;
+    li.addEventListener('click', () => selecionar(p.casas[0], p.d));
+    p.li = li;
+    document.getElementById(p.d === 'H' ? 'pistas-h' : 'pistas-v').appendChild(li);
+  });
+}
+
+function palavraAtiva() {
+  return atual.casa && atual.casa.palavras[atual.dir];
+}
+
+function outraDir(d) { return d === 'H' ? 'V' : 'H'; }
